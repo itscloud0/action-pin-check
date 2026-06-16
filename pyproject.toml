@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "action-pin-check"
+version = "0.1.0"
+description = "Audit GitHub Actions workflows for mutable or missing action pins."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+  { name = "itscloud0" }
+]
+keywords = [
+  "github-actions",
+  "ci",
+  "security",
+  "supply-chain",
+  "developer-tools"
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Quality Assurance",
+  "Topic :: Software Development :: Version Control :: Git"
+]
+
+[project.urls]
+Homepage = "https://github.com/itscloud0/action-pin-check"
+Repository = "https://github.com/itscloud0/action-pin-check"
+Issues = "https://github.com/itscloud0/action-pin-check/issues"
+Changelog = "https://github.com/itscloud0/action-pin-check/blob/main/CHANGELOG.md"
+
+[project.scripts]
+action-pin-check = "action_pin_check.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

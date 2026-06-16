@@ -1,0 +1,88 @@
+import tempfile
+import unittest
+from pathlib import Path
+
+from action_pin_check.scanner import exit_code_for, scan_path
+
+
+PINNED_SHA = "0123456789abcdef0123456789abcdef01234567"
+
+
+class ScannerTests(unittest.TestCase):
+    def test_detects_mutable_and_missing_refs(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "ci.yml").write_text(
+                "\n".join(
+                    [
+                        "name: ci",
+                        "on: [push]",
+                        "jobs:",
+                        "  test:",
+                        "    runs-on: ubuntu-latest",
+                        "    steps:",
+                        "      - uses: actions/checkout@v4",
+                        "      - uses: actions/setup-python@main",
+                        "      - uses: acme/no-ref",
+                        "      - uses: ./local-action",
+                        f"      - uses: owner/pinned@{PINNED_SHA}",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = scan_path(root)
+
+        codes = [finding.code for finding in result.findings]
+        self.assertEqual(result.workflow_count, 1)
+        self.assertEqual(result.action_count, 4)
+        self.assertEqual(
+            codes,
+            ["mutable-version-ref", "floating-branch-ref", "missing-action-ref"],
+        )
+
+    def test_full_sha_is_ok(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "safe.yml"
+            workflow.write_text(
+                "\n".join(
+                    [
+                        "jobs:",
+                        "  test:",
+                        "    steps:",
+                        f"      - uses: actions/checkout@{PINNED_SHA}",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            result = scan_path(workflow)
+
+        self.assertTrue(result.ok)
+        self.assertEqual(result.action_count, 1)
+
+    def test_exit_code_policy(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "ci.yml"
+            workflow.write_text(
+                "steps:\n  - uses: actions/checkout@v4\n",
+                encoding="utf-8",
+            )
+            result = scan_path(workflow)
+
+        self.assertEqual(exit_code_for(result, "warning"), 1)
+        self.assertEqual(exit_code_for(result, "error"), 0)
+        self.assertEqual(exit_code_for(result, "never"), 0)
+
+    def test_no_workflows_is_error(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            result = scan_path(tmp)
+
+        self.assertFalse(result.ok)
+        self.assertEqual(result.findings[0].code, "no-workflows-found")
+
+
+if __name__ == "__main__":
+    unittest.main()
