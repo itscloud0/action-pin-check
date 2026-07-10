@@ -40,6 +40,48 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("OK:", stdout.getvalue())
 
+    def test_github_annotations_output_points_to_workflow_line(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "ci.yml"
+            workflow.write_text(
+                "steps:\n  - uses: actions/checkout@main\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(
+                    [
+                        tmp,
+                        "--format",
+                        "github-annotations",
+                        "--fail-on",
+                        "never",
+                    ]
+                )
+
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            stdout.getvalue().strip(),
+            "::error file=ci.yml,line=2,title=floating-branch-ref::"
+            "Action is pinned to a mutable branch ref. Fix: Replace the branch "
+            "with a reviewed full commit SHA. uses: actions/checkout@main",
+        )
+
+    def test_github_annotations_output_is_empty_for_clean_workflow(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "safe.yml"
+            workflow.write_text(
+                "steps:\n"
+                "  - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main([tmp, "--format", "github-annotations"])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), "")
+
 
 if __name__ == "__main__":
     unittest.main()

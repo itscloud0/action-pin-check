@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "action-pin-check"
-version = "0.1.0"
+version = "0.2.0"
 description = "Audit GitHub Actions workflows for mutable or missing action pins."
 readme = "README.md"
 requires-python = ">=3.9"

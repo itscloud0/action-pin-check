@@ -78,6 +78,12 @@ Return JSON for automation:
 action-pin-check --format json --fail-on never
 ```
 
+Emit GitHub Actions workflow annotations for inline CI findings:
+
+```bash
+action-pin-check --format github-annotations --fail-on error
+```
+
 Fail CI only on hard errors, not version-tag warnings:
 
 ```bash
@@ -118,7 +124,6 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 
 - Optional SARIF output for GitHub code scanning.
 - Config file for allowed tag refs.
-- Inline GitHub Actions annotations.
 - Safer fix suggestions that include action repository links.
 - Reusable workflow coverage.
 

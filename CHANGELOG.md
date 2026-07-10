@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.2.0 - 2026-07-10
+
+- Added `--format github-annotations` for inline GitHub Actions workflow commands.
+- Documented annotation output for CI users.
+
 ## v0.1.0 - 2026-06-16
 
 - Initial release of `action-pin-check`.

@@ -22,7 +22,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument(
         "--format",
-        choices=("text", "json"),
+        choices=("text", "json", "github-annotations"),
         default="text",
         help="Output format.",
     )
@@ -38,6 +38,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     result = scan_path(args.path)
     if args.format == "json":
         print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    elif args.format == "github-annotations":
+        annotations = _format_github_annotations(result)
+        if annotations:
+            print(annotations)
     else:
         print(_format_text(result))
 
@@ -76,6 +80,39 @@ def _format_text(result: ScanResult) -> str:
             ]
         )
     return "\n".join(lines).rstrip()
+
+
+def _format_github_annotations(result: ScanResult) -> str:
+    lines = []
+    for finding in result.findings:
+        command = "error" if finding.severity == "error" else "warning"
+        props = [
+            f"file={_escape_annotation_property(finding.file)}",
+            f"title={_escape_annotation_property(finding.code)}",
+        ]
+        if finding.line > 0:
+            props.insert(1, f"line={finding.line}")
+        ref = f"@{finding.ref}" if finding.ref else ""
+        message = (
+            f"{finding.message} Fix: {finding.suggestion} "
+            f"uses: {finding.action}{ref}".rstrip()
+        )
+        lines.append(
+            f"::{command} {','.join(props)}::{_escape_annotation_data(message)}"
+        )
+    return "\n".join(lines)
+
+
+def _escape_annotation_data(value: str) -> str:
+    return value.replace("%", "%25").replace("\r", "%0D").replace("\n", "%0A")
+
+
+def _escape_annotation_property(value: str) -> str:
+    return (
+        _escape_annotation_data(value)
+        .replace(":", "%3A")
+        .replace(",", "%2C")
+    )
 
 
 if __name__ == "__main__":
