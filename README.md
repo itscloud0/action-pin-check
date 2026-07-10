@@ -78,6 +78,12 @@ Return JSON for automation:
 action-pin-check --format json --fail-on never
 ```
 
+Emit SARIF for GitHub code scanning:
+
+```bash
+action-pin-check --format sarif --fail-on never > action-pin-check.sarif
+```
+
 Emit GitHub Actions workflow annotations for inline CI findings:
 
 ```bash
@@ -104,6 +110,7 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 
 - Audit a new open-source repo before launch.
 - Add a lightweight CI gate for workflow changes.
+- Upload SARIF findings to GitHub code scanning.
 - Produce JSON findings for a repo-quality dashboard.
 - Review incoming pull requests that edit `.github/workflows`.
 - Teach contributors why mutable action refs matter.
@@ -122,7 +129,6 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 
 ## Roadmap
 
-- Optional SARIF output for GitHub code scanning.
 - Config file for allowed tag refs.
 - Safer fix suggestions that include action repository links.
 - Reusable workflow coverage.

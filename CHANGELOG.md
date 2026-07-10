@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.0 - 2026-07-10
+
+- Added `--format sarif` for GitHub code scanning upload workflows.
+- Documented SARIF output alongside text, JSON, and GitHub annotation output.
+
 ## v0.2.0 - 2026-07-10
 
 - Added `--format github-annotations` for inline GitHub Actions workflow commands.

@@ -82,6 +82,50 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), "")
 
+    def test_sarif_output_is_machine_readable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "ci.yml"
+            workflow.write_text(
+                "steps:\n  - uses: actions/setup-python@main\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main([tmp, "--format", "sarif", "--fail-on", "never"])
+
+        payload = json.loads(stdout.getvalue())
+        run = payload["runs"][0]
+        result = run["results"][0]
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["version"], "2.1.0")
+        self.assertEqual(run["tool"]["driver"]["name"], "action-pin-check")
+        self.assertEqual(result["ruleId"], "floating-branch-ref")
+        self.assertEqual(result["level"], "error")
+        self.assertEqual(
+            result["locations"][0]["physicalLocation"]["artifactLocation"]["uri"],
+            "ci.yml",
+        )
+        self.assertEqual(
+            result["locations"][0]["physicalLocation"]["region"]["startLine"],
+            2,
+        )
+
+    def test_sarif_output_has_empty_results_for_clean_workflow(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "safe.yml"
+            workflow.write_text(
+                "steps:\n"
+                "  - uses: actions/checkout@0123456789abcdef0123456789abcdef01234567\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main([str(workflow), "--format", "sarif"])
+
+        payload = json.loads(stdout.getvalue())
+        self.assertEqual(code, 0)
+        self.assertEqual(payload["runs"][0]["results"], [])
+
 
 if __name__ == "__main__":
     unittest.main()
