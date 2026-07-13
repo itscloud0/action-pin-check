@@ -8,7 +8,7 @@ from typing import Sequence
 from urllib.parse import quote
 
 from . import __version__
-from .scanner import Finding, ScanResult, exit_code_for, scan_path
+from .scanner import ConfigError, Finding, ScanResult, exit_code_for, scan_path
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -34,10 +34,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="warning",
         help="Choose which finding severity should produce a non-zero exit code.",
     )
+    parser.add_argument(
+        "--config",
+        metavar="PATH",
+        help=(
+            "JSON config with exact allowed tag refs; defaults to "
+            ".action-pin-check.json when present."
+        ),
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
 
-    result = scan_path(args.path)
+    try:
+        result = scan_path(args.path, config_path=args.config)
+    except ConfigError as exc:
+        parser.error(str(exc))
     if args.format == "json":
         print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
     elif args.format == "sarif":

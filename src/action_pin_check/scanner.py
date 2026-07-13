@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import json
 from pathlib import Path
 import re
-from typing import Iterable
+from typing import Iterable, Mapping
 
 USES_RE = re.compile(r"^\s*(?:-\s*)?uses\s*:\s*['\"]?([^'\"\s#]+)")
 SHA_RE = re.compile(r"^[a-fA-F0-9]{40,64}$")
 SHORT_SHA_RE = re.compile(r"^[a-fA-F0-9]{7,39}$")
 FLOATING_REFS = {"main", "master", "trunk", "develop", "dev", "head"}
+DEFAULT_CONFIG_NAME = ".action-pin-check.json"
+
+
+class ConfigError(ValueError):
+    """Raised when an action-pin-check config file is invalid."""
 
 
 @dataclass(frozen=True)
@@ -47,14 +53,22 @@ class ScanResult:
         }
 
 
-def scan_path(path: str | Path) -> ScanResult:
+def scan_path(
+    path: str | Path,
+    config_path: str | Path | None = None,
+) -> ScanResult:
     root = Path(path).resolve()
+    allowed_tag_refs = _load_allowed_tag_refs(root, config_path)
     workflows = tuple(_workflow_files(root))
     findings: list[Finding] = []
     action_count = 0
 
     for workflow in workflows:
-        workflow_findings, workflow_action_count = _scan_workflow(workflow, root)
+        workflow_findings, workflow_action_count = _scan_workflow(
+            workflow,
+            root,
+            allowed_tag_refs,
+        )
         findings.extend(workflow_findings)
         action_count += workflow_action_count
 
@@ -106,7 +120,11 @@ def _workflow_files(root: Path) -> Iterable[Path]:
         yield from sorted(workflow_dir.glob(pattern))
 
 
-def _scan_workflow(workflow: Path, root: Path) -> tuple[list[Finding], int]:
+def _scan_workflow(
+    workflow: Path,
+    root: Path,
+    allowed_tag_refs: set[str],
+) -> tuple[list[Finding], int]:
     findings: list[Finding] = []
     action_count = 0
 
@@ -175,7 +193,7 @@ def _scan_workflow(workflow: Path, root: Path) -> tuple[list[Finding], int]:
                     "Replace the branch with a reviewed full commit SHA.",
                 )
             )
-        else:
+        elif f"{action}@{ref}" not in allowed_tag_refs:
             findings.append(
                 _finding(
                     "warning",
@@ -191,6 +209,53 @@ def _scan_workflow(workflow: Path, root: Path) -> tuple[list[Finding], int]:
             )
 
     return findings, action_count
+
+
+def _load_allowed_tag_refs(
+    root: Path,
+    config_path: str | Path | None,
+) -> set[str]:
+    path = _resolve_config_path(root, config_path)
+    if path is None:
+        return set()
+
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ConfigError(f"Unable to read config {path}: {exc}") from exc
+
+    if not isinstance(payload, Mapping):
+        raise ConfigError(f"Config {path} must contain a JSON object.")
+
+    allowed = payload.get("allowed_tag_refs", [])
+    if not isinstance(allowed, list) or not all(
+        isinstance(value, str) for value in allowed
+    ):
+        raise ConfigError(
+            f"Config {path} field 'allowed_tag_refs' must be a list of strings."
+        )
+
+    return {value for value in allowed if value}
+
+
+def _resolve_config_path(
+    root: Path,
+    config_path: str | Path | None,
+) -> Path | None:
+    if config_path is not None:
+        path = Path(config_path).expanduser().resolve()
+        if not path.is_file():
+            raise ConfigError(f"Config file does not exist: {path}")
+        return path
+
+    config_root = root
+    if root.is_file():
+        config_root = root.parent
+    elif root.name == "workflows" and root.parent.name == ".github":
+        config_root = root.parent.parent
+
+    candidate = config_root / DEFAULT_CONFIG_NAME
+    return candidate if candidate.is_file() else None
 
 
 def _is_local_or_docker_action(spec: str) -> bool:

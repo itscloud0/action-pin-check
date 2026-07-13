@@ -90,6 +90,22 @@ Emit GitHub Actions workflow annotations for inline CI findings:
 action-pin-check --format github-annotations --fail-on error
 ```
 
+Allow a reviewed tag for one action while keeping branch and missing-ref findings:
+
+```json
+{
+  "allowed_tag_refs": [
+    "actions/checkout@v4",
+    "actions/setup-python@v5"
+  ]
+}
+```
+
+Save that as `.action-pin-check.json` at the repository root and scan normally, or
+pass another file with `--config path/to/policy.json`. Allowed entries must use the
+exact `owner/action@tag` form. Full commit SHAs remain the default recommendation;
+branch refs and missing refs are never allowlisted.
+
 Fail CI only on hard errors, not version-tag warnings:
 
 ```bash
@@ -129,7 +145,6 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 
 ## Roadmap
 
-- Config file for allowed tag refs.
 - Safer fix suggestions that include action repository links.
 - Reusable workflow coverage.
 

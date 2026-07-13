@@ -9,6 +9,25 @@ from action_pin_check.cli import main
 
 
 class CliTests(unittest.TestCase):
+    def test_config_option_allows_reviewed_tag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow = Path(tmp) / "ci.yml"
+            workflow.write_text(
+                "steps:\n  - uses: actions/checkout@v4\n",
+                encoding="utf-8",
+            )
+            config = Path(tmp) / "policy.json"
+            config.write_text(
+                '{"allowed_tag_refs": ["actions/checkout@v4"]}\n',
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main([str(workflow), "--config", str(config)])
+
+        self.assertEqual(code, 0)
+        self.assertIn("OK:", stdout.getvalue())
+
     def test_json_output_is_machine_readable(self):
         with tempfile.TemporaryDirectory() as tmp:
             workflow = Path(tmp) / "ci.yml"

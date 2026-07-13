@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0 - 2026-07-13
+
+- Added optional `.action-pin-check.json` configuration for exact, reviewed tag refs.
+- Added `--config` for selecting an explicit JSON policy file.
+- Kept branch refs and missing refs as findings even when configuration is present.
+
 ## v0.3.0 - 2026-07-10
 
 - Added `--format sarif` for GitHub code scanning upload workflows.

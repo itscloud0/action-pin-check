@@ -9,6 +9,49 @@ PINNED_SHA = "0123456789abcdef0123456789abcdef01234567"
 
 
 class ScannerTests(unittest.TestCase):
+    def test_config_allows_exact_tag_refs_but_not_branches(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow = root / "ci.yml"
+            workflow.write_text(
+                "steps:\n"
+                "  - uses: actions/checkout@v4\n"
+                "  - uses: actions/setup-python@main\n"
+                "  - uses: actions/setup-node@v4\n",
+                encoding="utf-8",
+            )
+            config = root / ".action-pin-check.json"
+            config.write_text(
+                '{"allowed_tag_refs": ["actions/checkout@v4"]}\n',
+                encoding="utf-8",
+            )
+
+            result = scan_path(root)
+
+        self.assertEqual(
+            [finding.code for finding in result.findings],
+            ["floating-branch-ref", "mutable-version-ref"],
+        )
+        self.assertEqual(result.findings[1].action, "actions/setup-node")
+
+    def test_explicit_config_path_is_supported(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / "workflows"
+            root.mkdir()
+            (root / "ci.yml").write_text(
+                "steps:\n  - uses: actions/checkout@v4\n",
+                encoding="utf-8",
+            )
+            config = Path(tmp) / "policy.json"
+            config.write_text(
+                '{"allowed_tag_refs": ["actions/checkout@v4"]}\n',
+                encoding="utf-8",
+            )
+
+            result = scan_path(root, config_path=config)
+
+        self.assertTrue(result.ok)
+
     def test_detects_mutable_and_missing_refs(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

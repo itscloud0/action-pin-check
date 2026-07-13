@@ -1,4 +1,4 @@
-# action-pin-check v0.3.0
+# action-pin-check v0.4.0
 
 Feature release.
 
@@ -6,6 +6,9 @@ Feature release.
 
 Included:
 
+- Optional `.action-pin-check.json` allowlist for exact reviewed tag refs.
+- `--config` for an explicit JSON policy path.
+- Branch refs and missing refs remain findings regardless of allowlist entries.
 - `--format sarif` for GitHub code scanning upload workflows.
 - `--format github-annotations` for inline CI findings on exact workflow lines.
 - Existing text output for humans.
