@@ -129,6 +129,7 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 - Upload SARIF findings to GitHub code scanning.
 - Produce JSON findings for a repo-quality dashboard.
 - Review incoming pull requests that edit `.github/workflows`.
+- Audit remote reusable-workflow call sites while ignoring local reusable paths.
 - Teach contributors why mutable action refs matter.
 
 ## Comparison and alternatives
@@ -140,13 +141,13 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 - Parses common `uses:` lines with a lightweight scanner, not a full YAML parser.
 - Does not verify whether a SHA exists upstream.
 - Does not rewrite workflow files automatically.
-- Does not inspect reusable workflow internals.
+- Does not inspect the internals of called reusable workflows.
 - Ignores local and Docker actions in v0.1.
 
 ## Roadmap
 
 - Safer fix suggestions that include action repository links.
-- Reusable workflow coverage.
+- Deeper analysis of called reusable workflow internals.
 
 ## Contributing
 

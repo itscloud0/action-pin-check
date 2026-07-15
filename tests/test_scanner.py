@@ -106,6 +106,22 @@ class ScannerTests(unittest.TestCase):
         self.assertTrue(result.ok)
         self.assertEqual(result.action_count, 1)
 
+    def test_reusable_workflow_calls_count_remote_refs_and_skip_local_paths(self):
+        fixture = Path(__file__).parent / "fixtures" / "reusable-workflow.yml"
+
+        result = scan_path(fixture.parent)
+
+        self.assertEqual(result.action_count, 1)
+        self.assertEqual(len(result.findings), 1)
+        finding = result.findings[0]
+        self.assertEqual(finding.code, "floating-branch-ref")
+        self.assertEqual(
+            finding.action,
+            "acme/platform/.github/workflows/reusable.yml",
+        )
+        self.assertEqual(finding.ref, "main")
+        self.assertEqual(finding.file, "reusable-workflow.yml")
+
     def test_exit_code_policy(self):
         with tempfile.TemporaryDirectory() as tmp:
             workflow = Path(tmp) / "ci.yml"

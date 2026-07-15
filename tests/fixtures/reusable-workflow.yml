@@ -1,0 +1,11 @@
+name: reusable-workflow-call-sites
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remote:
+    uses: acme/platform/.github/workflows/reusable.yml@main
+
+  local:
+    uses: ./.github/workflows/reusable.yml
