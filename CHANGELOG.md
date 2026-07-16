@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.4.1 - 2026-07-16
+
+- Aligned finding codes in text output while preserving complete workflow paths.
+
 ## v0.4.0 - 2026-07-13
 
 - Added optional `.action-pin-check.json` configuration for exact, reviewed tag refs.

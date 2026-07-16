@@ -59,6 +59,38 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("OK:", stdout.getvalue())
 
+    def test_text_output_aligns_finding_codes_without_truncating_paths(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workflow_dir = Path(tmp) / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "short.yml").write_text(
+                "steps:\n  - uses: actions/checkout@v4\n",
+                encoding="utf-8",
+            )
+            long_name = "a-workflow-with-a-deliberately-long-name-for-readable-output.yml"
+            (workflow_dir / long_name).write_text(
+                "steps:\n  - uses: actions/checkout@main\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main([tmp, "--fail-on", "never"])
+
+        output_lines = stdout.getvalue().splitlines()
+        finding_lines = [line for line in output_lines if "-ref" in line]
+        finding_by_code = {}
+        for line in finding_lines:
+            for finding_code in ("mutable-version-ref", "floating-branch-ref"):
+                if finding_code in line:
+                    finding_by_code[finding_code] = line
+        self.assertEqual(code, 0)
+        self.assertEqual(len(finding_lines), 2)
+        self.assertEqual(
+            finding_by_code["mutable-version-ref"].index("mutable-version-ref"),
+            finding_by_code["floating-branch-ref"].index("floating-branch-ref"),
+        )
+        self.assertIn(long_name + ":2", finding_by_code["floating-branch-ref"])
+
     def test_github_annotations_output_points_to_workflow_line(self):
         with tempfile.TemporaryDirectory() as tmp:
             workflow = Path(tmp) / "ci.yml"

@@ -26,21 +26,23 @@ Action Pin Check
 Root: /path/to/action-pin-check/examples/workflows
 Workflows: 1  External actions: 3  Findings: 3
 
-WARNING unsafe.yml:10 mutable-version-ref
+WARNING unsafe.yml:10  mutable-version-ref
   uses: actions/checkout@v4
   Action uses a tag or other mutable ref.
   Fix: For stronger supply-chain control, pin to a full commit SHA.
 
-ERROR unsafe.yml:11 floating-branch-ref
+ERROR   unsafe.yml:11  floating-branch-ref
   uses: actions/setup-python@main
   Action is pinned to a mutable branch ref.
   Fix: Replace the branch with a reviewed full commit SHA.
 
-ERROR unsafe.yml:12 missing-action-ref
+ERROR   unsafe.yml:12  missing-action-ref
   uses: acme/internal-action
   Action reference is missing an @ref.
   Fix: Pin acme/internal-action to a full commit SHA.
 ```
+
+Text output keeps complete workflow paths and aligns finding codes for easier scanning.
 
 ## Installation
 

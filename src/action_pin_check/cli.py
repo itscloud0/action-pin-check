@@ -70,6 +70,8 @@ def _format_text(result: ScanResult) -> str:
             f"{result.action_count} external action use(s), no pinning findings."
         )
 
+    locations = [_finding_location(finding) for finding in result.findings]
+    location_width = max(map(len, locations))
     lines = [
         "Action Pin Check",
         f"Root: {result.root}",
@@ -80,14 +82,14 @@ def _format_text(result: ScanResult) -> str:
         ),
         "",
     ]
-    for finding in result.findings:
-        location = finding.file
-        if finding.line:
-            location = f"{location}:{finding.line}"
+    for finding, location in zip(result.findings, locations):
         ref = f"@{finding.ref}" if finding.ref else ""
         lines.extend(
             [
-                f"{finding.severity.upper()} {location} {finding.code}",
+                (
+                    f"{finding.severity.upper():<7} {location:<{location_width}}  "
+                    f"{finding.code}"
+                ),
                 f"  uses: {finding.action}{ref}".rstrip(),
                 f"  {finding.message}",
                 f"  Fix: {finding.suggestion}",
@@ -95,6 +97,12 @@ def _format_text(result: ScanResult) -> str:
             ]
         )
     return "\n".join(lines).rstrip()
+
+
+def _finding_location(finding: Finding) -> str:
+    if finding.line:
+        return f"{finding.file}:{finding.line}"
+    return finding.file
 
 
 def _format_github_annotations(result: ScanResult) -> str:

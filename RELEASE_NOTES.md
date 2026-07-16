@@ -1,4 +1,11 @@
-# action-pin-check v0.4.0
+# action-pin-check v0.4.1
+
+Patch release.
+
+- Text output aligns finding codes when workflow paths have different lengths.
+- Complete `file:line` locations remain visible and copy-paste friendly.
+
+## v0.4.0
 
 Feature release.
 
