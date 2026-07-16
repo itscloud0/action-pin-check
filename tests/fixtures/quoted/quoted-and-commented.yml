@@ -1,0 +1,17 @@
+name: quoted-and-commented
+
+on:
+  workflow_dispatch:
+
+jobs:
+  reusable:
+    uses: "acme/platform/.github/workflows/reusable.yml@v3" # quoted remote call
+
+  local-reusable:
+    uses: './.github/workflows/reusable.yml' # quoted local call is ignored
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: 'actions/checkout@main' # single-quoted branch ref
+      - uses: "actions/setup-python@0123456789abcdef0123456789abcdef01234567" # pinned

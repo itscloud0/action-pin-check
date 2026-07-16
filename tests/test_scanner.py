@@ -122,6 +122,31 @@ class ScannerTests(unittest.TestCase):
         self.assertEqual(finding.ref, "main")
         self.assertEqual(finding.file, "reusable-workflow.yml")
 
+    def test_quoted_uses_values_and_inline_comments(self):
+        fixture = (
+            Path(__file__).parent
+            / "fixtures"
+            / "quoted"
+            / "quoted-and-commented.yml"
+        )
+
+        result = scan_path(fixture)
+
+        self.assertEqual(result.action_count, 3)
+        self.assertEqual(
+            [(finding.code, finding.action, finding.ref, finding.line)
+             for finding in result.findings],
+            [
+                (
+                    "mutable-version-ref",
+                    "acme/platform/.github/workflows/reusable.yml",
+                    "v3",
+                    8,
+                ),
+                ("floating-branch-ref", "actions/checkout", "main", 16),
+            ],
+        )
+
     def test_exit_code_policy(self):
         with tempfile.TemporaryDirectory() as tmp:
             workflow = Path(tmp) / "ci.yml"
