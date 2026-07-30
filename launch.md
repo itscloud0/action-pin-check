@@ -67,25 +67,25 @@ Repo: https://github.com/itscloud0/action-pin-check
 4. Fail CI on warnings or only on errors.
 5. Keep local and Docker actions out of scope for a focused audit.
 
-## Good first issue ideas
+## Completed launch checklist
 
-1. Add fixtures for reusable workflow `uses:` patterns.
-2. Improve text output alignment for long workflow paths.
-3. Add tests for quoted `uses:` values and inline comments.
+1. Added fixtures for reusable workflow `uses:` patterns.
+2. Improved text output alignment for long workflow paths.
+3. Added tests for quoted `uses:` values and inline comments.
 
-## Roadmap issues
+## Shipped since v0.1.0
 
-1. Add SARIF output for GitHub code scanning.
-2. Add optional config for allowed tag refs.
-3. Add GitHub Actions annotation output.
+1. Added SARIF output for GitHub code scanning (`v0.3.0`).
+2. Added optional config for allowed tag refs (`v0.4.0`).
+3. Added GitHub Actions annotation output (`v0.2.0`).
 
-## Suggested first release title
+## Current release title
 
-`action-pin-check v0.1.0`
+`action-pin-check v0.4.1`
 
-## Short first release notes
+## Current release notes
 
-Initial release of a local CLI that audits GitHub Actions workflow `uses:` refs for missing refs, branch refs, mutable version refs, and short SHAs. Includes text output, JSON output, CI exit policy, tests, and examples.
+Current releases include text, JSON, GitHub annotation, and SARIF output, exact reviewed-tag configuration, CI exit policies, tests, and workflow fixtures. Version `v0.4.1` also aligns long workflow paths in text findings without truncating their locations.
 
 ## What not to claim
 
@@ -98,7 +98,7 @@ Initial release of a local CLI that audits GitHub Actions workflow `uses:` refs 
 
 - Lightweight line scanner, not a full YAML parser.
 - Does not verify whether SHAs exist upstream.
-- Ignores local and Docker actions in v0.1.
+- Ignores local and Docker actions; this check targets external GitHub action refs.
 - Does not inspect nested reusable workflows.
 
 ## Maintainer note

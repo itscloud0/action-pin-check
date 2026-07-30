@@ -122,7 +122,7 @@ The included fixture contains a version tag, a branch ref, a missing ref, and a 
 action-pin-check examples/workflows --fail-on never
 ```
 
-Local actions like `./local-action` and Docker actions like `docker://...` are ignored in v0.1 because this tool focuses on external GitHub action refs.
+Local actions like `./local-action` and Docker actions like `docker://...` are ignored because this tool focuses on external GitHub action refs.
 
 ## Common use cases
 
@@ -144,7 +144,7 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 - Does not verify whether a SHA exists upstream.
 - Does not rewrite workflow files automatically.
 - Does not inspect the internals of called reusable workflows.
-- Ignores local and Docker actions in v0.1.
+- Ignores local and Docker actions; this tool focuses on external GitHub action refs.
 
 ## Roadmap
 
