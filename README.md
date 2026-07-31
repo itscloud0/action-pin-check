@@ -114,6 +114,14 @@ Fail CI only on hard errors, not version-tag warnings:
 action-pin-check --fail-on error
 ```
 
+## Add a GitHub Actions gate
+
+Copy [`examples/github-actions/action-pin-check.yml`](examples/github-actions/action-pin-check.yml)
+to `.github/workflows/action-pin-check.yml` in your repository. It runs when
+workflow files change and fails on missing, branch, or short-SHA refs while
+leaving version-tag refs as warnings. The example pins its own actions to full
+commit SHAs and installs the released `v0.4.1` package from GitHub.
+
 ## Demo
 
 The included fixture contains a version tag, a branch ref, a missing ref, and a local action:
