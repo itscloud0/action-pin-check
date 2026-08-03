@@ -52,6 +52,20 @@ From GitHub:
 python -m pip install git+https://github.com/itscloud0/action-pin-check.git
 ```
 
+For an isolated command-line install with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv tool install git+https://github.com/itscloud0/action-pin-check.git@v0.4.1
+action-pin-check .github/workflows --fail-on error
+```
+
+For a one-off audit without installing a persistent command:
+
+```bash
+uvx --from git+https://github.com/itscloud0/action-pin-check.git@v0.4.1 \
+  action-pin-check .github/workflows --fail-on error
+```
+
 For local development:
 
 ```bash
