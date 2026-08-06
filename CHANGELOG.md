@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0 - 2026-08-06
+
+- Added direct GitHub action repository URLs to text, JSON, GitHub annotation, and SARIF findings.
+
 ## v0.4.1 - 2026-07-16
 
 - Aligned finding codes in text output while preserving complete workflow paths.

@@ -43,6 +43,9 @@ ERROR   unsafe.yml:12  missing-action-ref
 ```
 
 Text output keeps complete workflow paths and aligns finding codes for easier scanning.
+Each finding also includes the direct GitHub repository URL for the referenced action,
+so maintainers can review the action before replacing a mutable ref. JSON exposes this
+as `repository_url`; SARIF includes it as the `actionRepository` result property.
 
 ## Installation
 
@@ -55,14 +58,14 @@ python -m pip install git+https://github.com/itscloud0/action-pin-check.git
 For an isolated command-line install with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install git+https://github.com/itscloud0/action-pin-check.git@v0.4.1
+uv tool install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
 action-pin-check .github/workflows --fail-on error
 ```
 
 For a one-off audit without installing a persistent command:
 
 ```bash
-uvx --from git+https://github.com/itscloud0/action-pin-check.git@v0.4.1 \
+uvx --from git+https://github.com/itscloud0/action-pin-check.git@v0.5.0 \
   action-pin-check .github/workflows --fail-on error
 ```
 
@@ -134,7 +137,7 @@ Copy [`examples/github-actions/action-pin-check.yml`](examples/github-actions/ac
 to `.github/workflows/action-pin-check.yml` in your repository. It runs when
 workflow files change and fails on missing, branch, or short-SHA refs while
 leaving version-tag refs as warnings. The example pins its own actions to full
-commit SHAs and installs the released `v0.4.1` package from GitHub.
+commit SHAs and installs the released `v0.5.0` package from GitHub.
 
 ## Demo
 
@@ -170,7 +173,6 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 
 ## Roadmap
 
-- Safer fix suggestions that include action repository links.
 - Deeper analysis of called reusable workflow internals.
 
 ## Contributing

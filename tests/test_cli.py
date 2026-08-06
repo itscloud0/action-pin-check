@@ -115,7 +115,8 @@ class CliTests(unittest.TestCase):
             stdout.getvalue().strip(),
             "::error file=ci.yml,line=2,title=floating-branch-ref::"
             "Action is pinned to a mutable branch ref. Fix: Replace the branch "
-            "with a reviewed full commit SHA. uses: actions/checkout@main",
+            "with a reviewed full commit SHA. uses: actions/checkout@main "
+            "Repository: https://github.com/actions/checkout",
         )
 
     def test_github_annotations_output_is_empty_for_clean_workflow(self):
@@ -159,6 +160,10 @@ class CliTests(unittest.TestCase):
         self.assertEqual(
             result["locations"][0]["physicalLocation"]["region"]["startLine"],
             2,
+        )
+        self.assertEqual(
+            result["properties"]["actionRepository"],
+            "https://github.com/actions/setup-python",
         )
 
     def test_sarif_output_has_empty_results_for_clean_workflow(self):

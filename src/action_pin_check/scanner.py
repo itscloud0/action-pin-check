@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 import re
 from typing import Iterable, Mapping
+from urllib.parse import quote
 
 USES_RE = re.compile(r"^\s*(?:-\s*)?uses\s*:\s*['\"]?([^'\"\s#]+)")
 SHA_RE = re.compile(r"^[a-fA-F0-9]{40,64}$")
@@ -27,6 +28,7 @@ class Finding:
     ref: str
     message: str
     suggestion: str
+    repository_url: str | None = None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -293,4 +295,15 @@ def _finding(
         ref=ref,
         message=message,
         suggestion=suggestion,
+        repository_url=_action_repository_url(action),
     )
+
+
+def _action_repository_url(action: str) -> str | None:
+    parts = action.split("/")
+    if len(parts) < 2 or any(
+        not re.fullmatch(r"[A-Za-z0-9_.-]+", part) for part in parts[:2]
+    ):
+        return None
+    owner, repository = (quote(part, safe="._-~") for part in parts[:2])
+    return f"https://github.com/{owner}/{repository}"

@@ -1,4 +1,12 @@
-# action-pin-check v0.4.1
+# action-pin-check v0.5.0
+
+Feature release.
+
+- Findings include a direct GitHub repository URL for each referenced action.
+- Text and annotation output show the URL for quick maintainer review.
+- JSON exposes `repository_url`; SARIF exposes `actionRepository`.
+
+## v0.4.1
 
 Patch release.
 

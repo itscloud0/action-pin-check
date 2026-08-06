@@ -33,6 +33,10 @@ class ScannerTests(unittest.TestCase):
             ["floating-branch-ref", "mutable-version-ref"],
         )
         self.assertEqual(result.findings[1].action, "actions/setup-node")
+        self.assertEqual(
+            result.findings[1].repository_url,
+            "https://github.com/actions/setup-node",
+        )
 
     def test_explicit_config_path_is_supported(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -121,6 +125,10 @@ class ScannerTests(unittest.TestCase):
         )
         self.assertEqual(finding.ref, "main")
         self.assertEqual(finding.file, "reusable-workflow.yml")
+        self.assertEqual(
+            finding.repository_url,
+            "https://github.com/acme/platform",
+        )
 
     def test_quoted_uses_values_and_inline_comments(self):
         fixture = (

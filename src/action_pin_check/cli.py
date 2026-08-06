@@ -91,6 +91,11 @@ def _format_text(result: ScanResult) -> str:
                     f"{finding.code}"
                 ),
                 f"  uses: {finding.action}{ref}".rstrip(),
+                *(
+                    [f"  Repository: {finding.repository_url}"]
+                    if finding.repository_url
+                    else []
+                ),
                 f"  {finding.message}",
                 f"  Fix: {finding.suggestion}",
                 "",
@@ -139,6 +144,11 @@ def _format_sarif(result: ScanResult) -> dict[str, object]:
                 "level": finding.severity,
                 "message": {"text": _finding_message(finding)},
                 "locations": [{"physicalLocation": physical_location}],
+                **(
+                    {"properties": {"actionRepository": finding.repository_url}}
+                    if finding.repository_url
+                    else {}
+                ),
             }
         )
 
@@ -189,6 +199,8 @@ def _finding_message(finding: Finding) -> str:
     if finding.action:
         ref = f"@{finding.ref}" if finding.ref else ""
         message = f"{message} uses: {finding.action}{ref}"
+    if finding.repository_url:
+        message = f"{message} Repository: {finding.repository_url}"
     return message
 
 
