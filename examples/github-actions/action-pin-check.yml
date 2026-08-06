@@ -22,6 +22,6 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install action-pin-check
-        run: python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
+        run: python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.4.1
       - name: Audit workflow action refs
         run: action-pin-check .github/workflows --fail-on error

@@ -1,4 +1,4 @@
-# action-pin-check v0.5.0
+# action-pin-check v0.5.0 (unreleased)
 
 Feature release.
 
