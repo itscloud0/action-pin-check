@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0 - 2026-08-06 (unreleased)
+## v0.5.0 - 2026-08-07
 
 - Added direct GitHub action repository URLs to text, JSON, GitHub annotation, and SARIF findings.
 

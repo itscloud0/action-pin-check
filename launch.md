@@ -81,11 +81,11 @@ Repo: https://github.com/itscloud0/action-pin-check
 
 ## Current release title
 
-`action-pin-check v0.4.1`
+`action-pin-check v0.5.0`
 
 ## Current release notes
 
-Current releases include text, JSON, GitHub annotation, and SARIF output, exact reviewed-tag configuration, CI exit policies, tests, and workflow fixtures. Version `v0.4.1` aligns long workflow paths in text findings without truncating their locations. The repository-link finding feature is prepared on `main` for `v0.5.0` and awaits public CI verification.
+Current releases include text, JSON, GitHub annotation, and SARIF output, exact reviewed-tag configuration, CI exit policies, tests, workflow fixtures, and direct GitHub action repository links in findings. Version `v0.5.0` adds repository URLs to human and machine-readable results.
 
 ## What not to claim
 
