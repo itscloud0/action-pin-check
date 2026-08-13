@@ -15,7 +15,7 @@ Security scanners can be broad and noisy. This tool does one narrow check: read 
 ## 30-second quickstart
 
 ```bash
-python -m pip install git+https://github.com/itscloud0/action-pin-check.git
+python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
 action-pin-check examples/workflows --fail-on never
 ```
 
@@ -52,7 +52,7 @@ as `repository_url`; SARIF includes it as the `actionRepository` result property
 From GitHub:
 
 ```bash
-python -m pip install git+https://github.com/itscloud0/action-pin-check.git
+python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
 ```
 
 For an isolated command-line install with [uv](https://docs.astral.sh/uv/):
