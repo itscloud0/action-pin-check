@@ -58,23 +58,35 @@ class ScanResult:
 def scan_path(
     path: str | Path,
     config_path: str | Path | None = None,
+    follow_local_reusable: bool = False,
 ) -> ScanResult:
     root = Path(path).resolve()
     allowed_tag_refs = _load_allowed_tag_refs(root, config_path)
-    workflows = tuple(_workflow_files(root))
+    repository_root = _repository_root(root)
+    workflows = list(_workflow_files(root))
+    pending_workflows = list(workflows)
+    scanned_workflows: set[Path] = set()
     findings: list[Finding] = []
     action_count = 0
 
-    for workflow in workflows:
-        workflow_findings, workflow_action_count = _scan_workflow(
+    while pending_workflows:
+        workflow = pending_workflows.pop(0)
+        if workflow in scanned_workflows:
+            continue
+        scanned_workflows.add(workflow)
+        workflow_findings, workflow_action_count, local_workflows = _scan_workflow(
             workflow,
             root,
             allowed_tag_refs,
+            repository_root if follow_local_reusable else None,
         )
         findings.extend(workflow_findings)
         action_count += workflow_action_count
+        for local_workflow in local_workflows:
+            if local_workflow not in scanned_workflows:
+                pending_workflows.append(local_workflow)
 
-    if not workflows:
+    if not scanned_workflows:
         findings.append(
             Finding(
                 severity="error",
@@ -90,7 +102,7 @@ def scan_path(
 
     return ScanResult(
         root=str(root),
-        workflow_count=len(workflows),
+        workflow_count=len(scanned_workflows),
         action_count=action_count,
         findings=tuple(findings),
     )
@@ -122,13 +134,25 @@ def _workflow_files(root: Path) -> Iterable[Path]:
         yield from sorted(workflow_dir.glob(pattern))
 
 
+def _repository_root(root: Path) -> Path:
+    if root.is_file():
+        if root.parent.name == "workflows" and root.parent.parent.name == ".github":
+            return root.parent.parent.parent
+        return root.parent
+    if root.name == "workflows" and root.parent.name == ".github":
+        return root.parent.parent
+    return root
+
+
 def _scan_workflow(
     workflow: Path,
     root: Path,
     allowed_tag_refs: set[str],
-) -> tuple[list[Finding], int]:
+    reusable_root: Path | None = None,
+) -> tuple[list[Finding], int, tuple[Path, ...]]:
     findings: list[Finding] = []
     action_count = 0
+    local_workflows: list[Path] = []
 
     try:
         lines = workflow.read_text(encoding="utf-8").splitlines()
@@ -144,6 +168,10 @@ def _scan_workflow(
 
         spec = match.group(1).rstrip(",")
         if _is_local_or_docker_action(spec):
+            if reusable_root is not None:
+                local_workflow = _resolve_local_reusable_workflow(spec, reusable_root)
+                if local_workflow is not None:
+                    local_workflows.append(local_workflow)
             continue
 
         action_count += 1
@@ -210,7 +238,7 @@ def _scan_workflow(
                 )
             )
 
-    return findings, action_count
+    return findings, action_count, tuple(local_workflows)
 
 
 def _load_allowed_tag_refs(
@@ -261,7 +289,30 @@ def _resolve_config_path(
 
 
 def _is_local_or_docker_action(spec: str) -> bool:
-    return spec.startswith(("./", "../", "docker://"))
+    return spec.startswith(("./", "../", "$/", "docker://"))
+
+
+def _resolve_local_reusable_workflow(
+    spec: str,
+    repository_root: Path,
+) -> Path | None:
+    if spec.startswith("./"):
+        relative = spec[2:]
+    elif spec.startswith("$/"):
+        relative = spec[2:]
+    else:
+        return None
+
+    relative_path = Path(relative)
+    if relative_path.suffix.lower() not in {".yml", ".yaml"}:
+        return None
+
+    candidate = (repository_root / relative_path).resolve()
+    try:
+        candidate.relative_to(repository_root)
+    except ValueError:
+        return None
+    return candidate if candidate.is_file() else None
 
 
 def _split_action_ref(spec: str) -> tuple[str, str]:

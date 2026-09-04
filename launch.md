@@ -72,6 +72,7 @@ Repo: https://github.com/itscloud0/action-pin-check
 1. Added fixtures for reusable workflow `uses:` patterns.
 2. Improved text output alignment for long workflow paths.
 3. Added tests for quoted `uses:` values and inline comments.
+4. Added opt-in traversal for existing same-repository reusable workflows.
 
 ## Shipped since v0.1.0
 
@@ -99,8 +100,11 @@ Current releases include text, JSON, GitHub annotation, and SARIF output, exact 
 - Lightweight line scanner, not a full YAML parser.
 - Does not verify whether SHAs exist upstream.
 - Ignores local and Docker actions; this check targets external GitHub action refs.
-- Does not inspect nested reusable workflows.
+- Does not fetch or inspect remote reusable workflow internals; use
+  `--follow-local-reusable` for existing same-repository workflow files.
 
 ## Maintainer note
 
-Keep this tool narrow and predictable. The best next features are output formats, fixtures, and CI integrations around the same action-ref pinning check.
+Keep this tool narrow and predictable. Future work should remain bounded around
+action-ref pinning, reusable-workflow fixtures, and CI integrations; do not turn
+it into a general workflow security scanner.

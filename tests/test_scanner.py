@@ -130,6 +130,59 @@ class ScannerTests(unittest.TestCase):
             "https://github.com/acme/platform",
         )
 
+    def test_follow_local_reusable_workflows_scans_nested_actions(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "caller.yml").write_text(
+                "jobs:\n  build:\n    uses: ./.github/workflows/reusable.yml\n",
+                encoding="utf-8",
+            )
+            (workflow_dir / "reusable.yml").write_text(
+                "jobs:\n  build:\n    steps:\n"
+                "      - uses: actions/checkout@main\n",
+                encoding="utf-8",
+            )
+
+            without_follow = scan_path(workflow_dir / "caller.yml")
+            with_follow = scan_path(
+                workflow_dir / "caller.yml",
+                follow_local_reusable=True,
+            )
+
+        self.assertEqual(without_follow.workflow_count, 1)
+        self.assertEqual(without_follow.action_count, 0)
+        self.assertEqual(without_follow.findings, ())
+        self.assertEqual(with_follow.workflow_count, 2)
+        self.assertEqual(with_follow.action_count, 1)
+        self.assertEqual(with_follow.findings[0].code, "floating-branch-ref")
+        self.assertTrue(with_follow.findings[0].file.endswith("/.github/workflows/reusable.yml"))
+
+    def test_follow_local_reusable_supports_repository_root_syntax(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "caller.yml").write_text(
+                "jobs:\n  build:\n    uses: $/.github/workflows/reusable.yml\n",
+                encoding="utf-8",
+            )
+            (workflow_dir / "reusable.yml").write_text(
+                "jobs:\n  build:\n    steps:\n"
+                "      - uses: actions/checkout@main\n",
+                encoding="utf-8",
+            )
+
+            result = scan_path(
+                root,
+                follow_local_reusable=True,
+            )
+
+        self.assertEqual(result.workflow_count, 2)
+        self.assertEqual(result.action_count, 1)
+        self.assertEqual(result.findings[0].code, "floating-branch-ref")
+
     def test_quoted_uses_values_and_inline_comments(self):
         fixture = (
             Path(__file__).parent

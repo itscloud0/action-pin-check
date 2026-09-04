@@ -59,6 +59,32 @@ class CliTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("OK:", stdout.getvalue())
 
+    def test_follow_local_reusable_option_scans_called_workflow(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            workflow_dir = root / ".github" / "workflows"
+            workflow_dir.mkdir(parents=True)
+            (workflow_dir / "caller.yml").write_text(
+                "jobs:\n  build:\n    uses: ./.github/workflows/reusable.yml\n",
+                encoding="utf-8",
+            )
+            (workflow_dir / "reusable.yml").write_text(
+                "jobs:\n  build:\n    steps:\n"
+                "      - uses: actions/checkout@main\n",
+                encoding="utf-8",
+            )
+            stdout = io.StringIO()
+            with redirect_stdout(stdout):
+                code = main(
+                    [
+                        str(workflow_dir / "caller.yml"),
+                        "--follow-local-reusable",
+                    ]
+                )
+
+        self.assertEqual(code, 1)
+        self.assertIn("floating-branch-ref", stdout.getvalue())
+
     def test_text_output_aligns_finding_codes_without_truncating_paths(self):
         with tempfile.TemporaryDirectory() as tmp:
             workflow_dir = Path(tmp) / ".github" / "workflows"

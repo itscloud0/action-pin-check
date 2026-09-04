@@ -91,6 +91,17 @@ Scan a workflow directory:
 action-pin-check .github/workflows
 ```
 
+When reviewing one caller workflow, include existing same-repository reusable
+workflow files in the scan:
+
+```bash
+action-pin-check .github/workflows/release.yml --follow-local-reusable
+```
+
+This follows local `./.github/workflows/*.yml` and `$/.github/workflows/*.yml`
+references only. Remote reusable workflows are still checked at their call
+site but are not fetched or inspected.
+
 Return JSON for automation:
 
 ```bash
@@ -168,7 +179,8 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 - Parses common `uses:` lines with a lightweight scanner, not a full YAML parser.
 - Does not verify whether a SHA exists upstream.
 - Does not rewrite workflow files automatically.
-- Does not inspect the internals of called reusable workflows.
+- Does not fetch or inspect remote reusable workflow internals; use
+  `--follow-local-reusable` for existing same-repository workflow files.
 - Ignores local and Docker actions; this tool focuses on external GitHub action refs.
 
 ## Roadmap

@@ -42,11 +42,23 @@ def main(argv: Sequence[str] | None = None) -> int:
             ".action-pin-check.json when present."
         ),
     )
+    parser.add_argument(
+        "--follow-local-reusable",
+        action="store_true",
+        help=(
+            "Also scan existing same-repository reusable workflow files "
+            "referenced by the selected workflow(s)."
+        ),
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
 
     try:
-        result = scan_path(args.path, config_path=args.config)
+        result = scan_path(
+            args.path,
+            config_path=args.config,
+            follow_local_reusable=args.follow_local_reusable,
+        )
     except ConfigError as exc:
         parser.error(str(exc))
     if args.format == "json":
