@@ -15,7 +15,7 @@ Security scanners can be broad and noisy. This tool does one narrow check: read 
 ## 30-second quickstart
 
 ```bash
-python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
+python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.6.0
 action-pin-check examples/workflows --fail-on never
 ```
 
@@ -52,20 +52,20 @@ as `repository_url`; SARIF includes it as the `actionRepository` result property
 From GitHub:
 
 ```bash
-python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
+python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.6.0
 ```
 
 For an isolated command-line install with [uv](https://docs.astral.sh/uv/):
 
 ```bash
-uv tool install git+https://github.com/itscloud0/action-pin-check.git@v0.5.0
+uv tool install git+https://github.com/itscloud0/action-pin-check.git@v0.6.0
 action-pin-check .github/workflows --fail-on error
 ```
 
 For a one-off audit without installing a persistent command:
 
 ```bash
-uvx --from git+https://github.com/itscloud0/action-pin-check.git@v0.5.0 \
+  uvx --from git+https://github.com/itscloud0/action-pin-check.git@v0.6.0 \
   action-pin-check .github/workflows --fail-on error
 ```
 
@@ -148,7 +148,7 @@ Copy [`examples/github-actions/action-pin-check.yml`](examples/github-actions/ac
 to `.github/workflows/action-pin-check.yml` in your repository. It runs when
 workflow files change and fails on missing, branch, or short-SHA refs while
 leaving version-tag refs as warnings. The example pins its own actions to full
-commit SHAs and installs the released `v0.5.0` package from GitHub.
+commit SHAs and installs the released `v0.6.0` package from GitHub.
 
 ## Demo
 

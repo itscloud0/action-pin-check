@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.6.0 - 2026-09-04
 
 - Added opt-in traversal of local same-repository reusable workflows with
   `--follow-local-reusable`.
