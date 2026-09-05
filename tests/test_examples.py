@@ -19,6 +19,10 @@ class ExampleWorkflowTests(unittest.TestCase):
         self.assertEqual(result.workflow_count, 1)
         self.assertEqual(result.action_count, 2)
 
+        content = example.read_text(encoding="utf-8")
+        self.assertIn("action-pin-check.git@v0.6.0", content)
+        self.assertIn("action-pin-check .github/workflows --follow-local-reusable", content)
+
 
 if __name__ == "__main__":
     unittest.main()
