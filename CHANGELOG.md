@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added opt-in `--follow-remote-reusable` traversal for public GitHub reusable
+  workflow internals, including nested same-repository calls.
+
 ## v0.6.0 - 2026-09-04
 
 - Added opt-in traversal of local same-repository reusable workflows with

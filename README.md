@@ -99,8 +99,16 @@ action-pin-check .github/workflows/release.yml --follow-local-reusable
 ```
 
 This follows local `./.github/workflows/*.yml` and `$/.github/workflows/*.yml`
-references only. Remote reusable workflows are still checked at their call
-site but are not fetched or inspected.
+references only. To inspect the internals of public remote reusable workflows as
+well, opt in to network fetching:
+
+```bash
+action-pin-check .github/workflows --follow-remote-reusable
+```
+
+This follows the declared GitHub ref, recursively checks public workflow files,
+and reports an error when a referenced file cannot be fetched. Remote traversal
+is opt-in; the default scan remains local and network-free.
 
 Return JSON for automation:
 
@@ -168,6 +176,7 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 - Produce JSON findings for a repo-quality dashboard.
 - Review incoming pull requests that edit `.github/workflows`.
 - Audit remote reusable-workflow call sites while ignoring local reusable paths.
+- Inspect mutable action refs inside public reusable-workflow internals.
 - Teach contributors why mutable action refs matter.
 
 ## Comparison and alternatives
@@ -179,13 +188,10 @@ Local actions like `./local-action` and Docker actions like `docker://...` are i
 - Parses common `uses:` lines with a lightweight scanner, not a full YAML parser.
 - Does not verify whether a SHA exists upstream.
 - Does not rewrite workflow files automatically.
-- Does not fetch or inspect remote reusable workflow internals; use
-  `--follow-local-reusable` for existing same-repository workflow files.
+- Remote reusable workflow internals are not fetched by default. The opt-in
+  `--follow-remote-reusable` mode reads public GitHub workflow files at their
+  declared refs; private, unreachable, or oversized files produce an error.
 - Ignores local and Docker actions; this tool focuses on external GitHub action refs.
-
-## Roadmap
-
-- Deeper analysis of called reusable workflow internals.
 
 ## Contributing
 

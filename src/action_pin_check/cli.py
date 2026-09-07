@@ -50,6 +50,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             "referenced by the selected workflow(s)."
         ),
     )
+    parser.add_argument(
+        "--follow-remote-reusable",
+        action="store_true",
+        help=(
+            "Fetch and scan public GitHub reusable workflow files referenced "
+            "by the selected workflow(s)."
+        ),
+    )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     args = parser.parse_args(argv)
 
@@ -58,6 +66,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.path,
             config_path=args.config,
             follow_local_reusable=args.follow_local_reusable,
+            follow_remote_reusable=args.follow_remote_reusable,
         )
     except ConfigError as exc:
         parser.error(str(exc))

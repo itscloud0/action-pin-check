@@ -5,13 +5,17 @@ import json
 from pathlib import Path
 import re
 from typing import Iterable, Mapping
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
+from urllib.request import Request, urlopen
 
 USES_RE = re.compile(r"^\s*(?:-\s*)?uses\s*:\s*['\"]?([^'\"\s#]+)")
 SHA_RE = re.compile(r"^[a-fA-F0-9]{40,64}$")
 SHORT_SHA_RE = re.compile(r"^[a-fA-F0-9]{7,39}$")
 FLOATING_REFS = {"main", "master", "trunk", "develop", "dev", "head"}
 DEFAULT_CONFIG_NAME = ".action-pin-check.json"
+REMOTE_WORKFLOW_MAX_BYTES = 1_000_000
+REMOTE_WORKFLOW_TIMEOUT_SECONDS = 10
 
 
 class ConfigError(ValueError):
@@ -55,17 +59,51 @@ class ScanResult:
         }
 
 
+@dataclass(frozen=True)
+class _RemoteWorkflow:
+    owner: str
+    repository: str
+    path: str
+    ref: str
+
+    @property
+    def identity(self) -> str:
+        return f"{self.owner}/{self.repository}/{self.path}@{self.ref}"
+
+    @property
+    def file_label(self) -> str:
+        return f"github://{self.identity}"
+
+    @property
+    def repository_url(self) -> str:
+        return f"https://github.com/{self.owner}/{self.repository}"
+
+    @property
+    def raw_url(self) -> str:
+        path = quote(self.path, safe="/._-")
+        ref = quote(self.ref, safe="")
+        return (
+            f"https://raw.githubusercontent.com/{self.owner}/"
+            f"{self.repository}/{ref}/{path}"
+        )
+
+
+class RemoteWorkflowFetchError(RuntimeError):
+    """Raised when an opted-in remote reusable workflow cannot be fetched."""
+
+
 def scan_path(
     path: str | Path,
     config_path: str | Path | None = None,
     follow_local_reusable: bool = False,
+    follow_remote_reusable: bool = False,
 ) -> ScanResult:
     root = Path(path).resolve()
     allowed_tag_refs = _load_allowed_tag_refs(root, config_path)
     repository_root = _repository_root(root)
     workflows = list(_workflow_files(root))
-    pending_workflows = list(workflows)
-    scanned_workflows: set[Path] = set()
+    pending_workflows: list[Path | _RemoteWorkflow] = list(workflows)
+    scanned_workflows: set[Path | _RemoteWorkflow] = set()
     findings: list[Finding] = []
     action_count = 0
 
@@ -74,17 +112,40 @@ def scan_path(
         if workflow in scanned_workflows:
             continue
         scanned_workflows.add(workflow)
-        workflow_findings, workflow_action_count, local_workflows = _scan_workflow(
-            workflow,
-            root,
-            allowed_tag_refs,
-            repository_root if follow_local_reusable else None,
-        )
+        if isinstance(workflow, _RemoteWorkflow):
+            (
+                workflow_findings,
+                workflow_action_count,
+                local_workflows,
+                remote_workflows,
+            ) = _scan_workflow(
+                workflow,
+                root,
+                allowed_tag_refs,
+                None,
+                follow_remote_reusable,
+            )
+        else:
+            (
+                workflow_findings,
+                workflow_action_count,
+                local_workflows,
+                remote_workflows,
+            ) = _scan_workflow(
+                workflow,
+                root,
+                allowed_tag_refs,
+                repository_root if follow_local_reusable else None,
+                follow_remote_reusable,
+            )
         findings.extend(workflow_findings)
         action_count += workflow_action_count
         for local_workflow in local_workflows:
             if local_workflow not in scanned_workflows:
                 pending_workflows.append(local_workflow)
+        for remote_workflow in remote_workflows:
+            if remote_workflow not in scanned_workflows:
+                pending_workflows.append(remote_workflow)
 
     if not scanned_workflows:
         findings.append(
@@ -145,17 +206,29 @@ def _repository_root(root: Path) -> Path:
 
 
 def _scan_workflow(
-    workflow: Path,
+    workflow: Path | _RemoteWorkflow,
     root: Path,
     allowed_tag_refs: set[str],
     reusable_root: Path | None = None,
-) -> tuple[list[Finding], int, tuple[Path, ...]]:
+    follow_remote_reusable: bool = False,
+) -> tuple[
+    list[Finding],
+    int,
+    tuple[Path, ...],
+    tuple[_RemoteWorkflow, ...],
+]:
     findings: list[Finding] = []
     action_count = 0
     local_workflows: list[Path] = []
+    remote_workflows: list[_RemoteWorkflow] = []
 
     try:
-        lines = workflow.read_text(encoding="utf-8").splitlines()
+        if isinstance(workflow, _RemoteWorkflow):
+            lines = _fetch_remote_workflow(workflow).splitlines()
+        else:
+            lines = workflow.read_text(encoding="utf-8").splitlines()
+    except RemoteWorkflowFetchError as exc:
+        return ([_remote_fetch_finding(workflow, str(exc))], 0, (), ())
     except UnicodeDecodeError:
         lines = workflow.read_text(errors="replace").splitlines()
 
@@ -172,6 +245,10 @@ def _scan_workflow(
                 local_workflow = _resolve_local_reusable_workflow(spec, reusable_root)
                 if local_workflow is not None:
                     local_workflows.append(local_workflow)
+            elif isinstance(workflow, _RemoteWorkflow) and follow_remote_reusable:
+                remote_workflow = _resolve_remote_relative_workflow(spec, workflow)
+                if remote_workflow is not None:
+                    remote_workflows.append(remote_workflow)
             continue
 
         action_count += 1
@@ -191,6 +268,11 @@ def _scan_workflow(
                 )
             )
             continue
+
+        if follow_remote_reusable:
+            remote_workflow = _resolve_remote_reusable_workflow(spec)
+            if remote_workflow is not None:
+                remote_workflows.append(remote_workflow)
 
         normalized = ref.lower()
         if SHA_RE.fullmatch(ref):
@@ -238,7 +320,7 @@ def _scan_workflow(
                 )
             )
 
-    return findings, action_count, tuple(local_workflows)
+    return findings, action_count, tuple(local_workflows), tuple(remote_workflows)
 
 
 def _load_allowed_tag_refs(
@@ -315,6 +397,96 @@ def _resolve_local_reusable_workflow(
     return candidate if candidate.is_file() else None
 
 
+def _resolve_remote_reusable_workflow(spec: str) -> _RemoteWorkflow | None:
+    action, ref = _split_action_ref(spec)
+    if not ref:
+        return None
+    parts = action.split("/")
+    if len(parts) < 3:
+        return None
+    owner, repository = parts[:2]
+    path = "/".join(parts[2:])
+    if not _valid_remote_workflow_reference(owner, repository, path):
+        return None
+    return _RemoteWorkflow(owner, repository, path, ref)
+
+
+def _resolve_remote_relative_workflow(
+    spec: str,
+    parent: _RemoteWorkflow,
+) -> _RemoteWorkflow | None:
+    if spec.startswith("./"):
+        path = spec[2:]
+    elif spec.startswith("$/"):
+        path = spec[2:]
+    else:
+        return None
+    if not _valid_remote_workflow_reference(parent.owner, parent.repository, path):
+        return None
+    return _RemoteWorkflow(parent.owner, parent.repository, path, parent.ref)
+
+
+def _valid_remote_workflow_reference(
+    owner: str,
+    repository: str,
+    path: str,
+) -> bool:
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", owner):
+        return False
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", repository):
+        return False
+    parts = path.split("/")
+    return (
+        len(parts) >= 3
+        and parts[:2] == [".github", "workflows"]
+        and parts[-1].lower().endswith((".yml", ".yaml"))
+        and all(part not in {"", ".", ".."} for part in parts)
+    )
+
+
+def _fetch_remote_workflow(workflow: _RemoteWorkflow) -> str:
+    request = Request(
+        workflow.raw_url,
+        headers={
+            "Accept": "text/plain",
+            "User-Agent": "action-pin-check",
+        },
+    )
+    try:
+        with urlopen(request, timeout=REMOTE_WORKFLOW_TIMEOUT_SECONDS) as response:
+            payload = response.read(REMOTE_WORKFLOW_MAX_BYTES + 1)
+    except HTTPError as exc:
+        raise RemoteWorkflowFetchError(f"HTTP {exc.code}") from exc
+    except (OSError, TimeoutError, URLError) as exc:
+        raise RemoteWorkflowFetchError(str(exc)) from exc
+
+    if len(payload) > REMOTE_WORKFLOW_MAX_BYTES:
+        raise RemoteWorkflowFetchError(
+            f"response exceeds {REMOTE_WORKFLOW_MAX_BYTES} bytes"
+        )
+    try:
+        return payload.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise RemoteWorkflowFetchError("response is not valid UTF-8") from exc
+
+
+def _remote_fetch_finding(workflow: _RemoteWorkflow, reason: str) -> Finding:
+    return Finding(
+        severity="error",
+        code="remote-workflow-fetch-failed",
+        file=workflow.file_label,
+        line=0,
+        action=f"{workflow.owner}/{workflow.repository}/{workflow.path}",
+        ref=workflow.ref,
+        message=f"Unable to fetch remote reusable workflow: {reason}.",
+        suggestion=(
+            "Verify the public repository, workflow path, and ref, or rerun "
+            "without --follow-remote-reusable."
+        ),
+        repository_url=workflow.repository_url,
+    )
+
+
 def _split_action_ref(spec: str) -> tuple[str, str]:
     if "@" not in spec:
         return spec, ""
@@ -325,7 +497,7 @@ def _split_action_ref(spec: str) -> tuple[str, str]:
 def _finding(
     severity: str,
     code: str,
-    workflow: Path,
+    workflow: str | Path,
     root: Path,
     line: int,
     action: str,
@@ -333,10 +505,15 @@ def _finding(
     message: str,
     suggestion: str,
 ) -> Finding:
-    try:
-        file_name = str(workflow.relative_to(root))
-    except ValueError:
-        file_name = str(workflow)
+    if isinstance(workflow, Path):
+        try:
+            file_name = str(workflow.relative_to(root))
+        except ValueError:
+            file_name = str(workflow)
+    elif isinstance(workflow, _RemoteWorkflow):
+        file_name = workflow.file_label
+    else:
+        file_name = workflow
     return Finding(
         severity=severity,
         code=code,
