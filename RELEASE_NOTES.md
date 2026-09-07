@@ -1,11 +1,20 @@
-# action-pin-check v0.6.0
+# action-pin-check v0.7.0
+
+Feature release.
+
+- Added opt-in `--follow-remote-reusable` traversal for public GitHub reusable
+  workflow internals, including nested same-repository calls.
+- Remote fetches are bounded, deduplicated, and reported as errors when the
+  public workflow cannot be inspected.
+
+## v0.6.0
 
 Feature release.
 
 - Added opt-in `--follow-local-reusable` traversal for existing
   same-repository reusable workflows.
 - Added coverage for local `./.github/workflows/...` and `$/.github/workflows/...`
-  call syntax while keeping remote workflow inspection local-only.
+  call syntax while keeping remote workflow inspection opt-in.
 
 ## v0.5.0
 
