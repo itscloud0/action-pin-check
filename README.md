@@ -49,6 +49,14 @@ as `repository_url`; SARIF includes it as the `actionRepository` result property
 
 ## Installation
 
+If Git is unavailable, install the exact `v0.7.0` release from GitHub's
+immutable source archive:
+
+```bash
+python -m pip install "https://github.com/itscloud0/action-pin-check/archive/e656bf11670c28d2b0d6c64b615a43f697cbd0e4.tar.gz"
+action-pin-check .github/workflows --fail-on error
+```
+
 From GitHub:
 
 ```bash

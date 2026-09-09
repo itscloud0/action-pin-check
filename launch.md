@@ -100,7 +100,8 @@ Current releases include text, JSON, GitHub annotation, and SARIF output, exact 
 - Lightweight line scanner, not a full YAML parser.
 - Does not verify whether SHAs exist upstream.
 - Ignores local and Docker actions; this check targets external GitHub action refs.
-- Does not fetch or inspect remote reusable workflow internals; use
+- Does not fetch or inspect remote reusable workflow internals by default; use
+  `--follow-remote-reusable` to opt in for public remote workflows, or
   `--follow-local-reusable` for existing same-repository workflow files.
 
 ## Maintainer note
