@@ -109,3 +109,13 @@ Current releases include text, JSON, GitHub annotation, and SARIF output, exact 
 Keep this tool narrow and predictable. Future work should remain bounded around
 action-ref pinning, reusable-workflow fixtures, and CI integrations; do not turn
 it into a general workflow security scanner.
+
+## Latest maintainer validation
+
+On 2026-09-18, the README was updated with direct `v0.7.0` wheel and source
+distribution URLs so users can install without Git, a checkout, or a local
+build. The exact public assets returned HTTP 200 (12,280-byte wheel and
+16,613-byte source distribution). Local Python 3.14.6 verification passed all
+24 tests, compileall, CLI fixture smoke, diff checks, and the scoped credential
+scan. Next step: observe artifact downloads and review adoption after the
+release's 14-day window before choosing further onboarding work.

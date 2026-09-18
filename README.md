@@ -49,6 +49,21 @@ as `repository_url`; SARIF includes it as the `actionRepository` result property
 
 ## Installation
 
+For the fastest checkout-free install, download the exact prebuilt `v0.7.0`
+wheel from the GitHub release:
+
+```bash
+python -m pip install "https://github.com/itscloud0/action-pin-check/releases/download/v0.7.0/action_pin_check-0.7.0-py3-none-any.whl"
+action-pin-check .github/workflows --fail-on error
+```
+
+If your platform cannot use the wheel, install the matching source distribution
+from the same release:
+
+```bash
+python -m pip install "https://github.com/itscloud0/action-pin-check/releases/download/v0.7.0/action_pin_check-0.7.0.tar.gz"
+```
+
 If Git is unavailable, install the exact `v0.7.0` release from GitHub's
 immutable source archive:
 
