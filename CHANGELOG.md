@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased - 2026-09-23
+
+- Make the exact public `v0.7.0` wheel the primary quickstart install and verify
+  it in CI without checking out the repository.
+
 ## v0.7.0 - 2026-09-07
 
 - Added opt-in `--follow-remote-reusable` traversal for public GitHub reusable

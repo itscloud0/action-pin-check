@@ -23,7 +23,7 @@ class ExampleWorkflowTests(unittest.TestCase):
         self.assertIn("action-pin-check.git@v0.7.0", content)
         self.assertIn("action-pin-check .github/workflows --follow-local-reusable", content)
 
-    def test_public_archive_install_path_is_pinned_and_checkout_free(self):
+    def test_public_install_paths_are_pinned_and_checkout_free(self):
         root = Path(__file__).resolve().parents[1]
         wheel_url = (
             "https://github.com/itscloud0/action-pin-check/releases/download/"
@@ -47,8 +47,18 @@ class ExampleWorkflowTests(unittest.TestCase):
         self.assertIn(wheel_url, readme)
         self.assertIn(sdist_url, readme)
         self.assertIn(archive_url, readme)
+        quickstart = readme.split("## 30-second quickstart", 1)[1].split(
+            "Expected demo output:", 1
+        )[0]
+        self.assertIn(wheel_url, quickstart)
+        self.assertNotIn("git+https://github.com/itscloud0/action-pin-check", quickstart)
         self.assertIn("Does not fetch or inspect remote reusable workflow internals by default", launch)
         self.assertIn("`--follow-remote-reusable`", launch)
+        public_job = workflow.split("  public-install:", 1)[1].split(
+            "  public-archive-install:", 1
+        )[0]
+        self.assertIn(wheel_url, public_job)
+        self.assertNotIn("      - uses: actions/checkout@", public_job)
         archive_job = workflow.split("  public-archive-install:", 1)[1]
         self.assertIn(archive_url, archive_job)
         archive_setup = archive_job.split(

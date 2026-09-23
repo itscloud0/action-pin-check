@@ -14,8 +14,11 @@ Security scanners can be broad and noisy. This tool does one narrow check: read 
 
 ## 30-second quickstart
 
+For a checkout-free install, download the exact prebuilt `v0.7.0` wheel from
+the GitHub release:
+
 ```bash
-python -m pip install git+https://github.com/itscloud0/action-pin-check.git@v0.7.0
+python -m pip install "https://github.com/itscloud0/action-pin-check/releases/download/v0.7.0/action_pin_check-0.7.0-py3-none-any.whl"
 action-pin-check examples/workflows --fail-on never
 ```
 
