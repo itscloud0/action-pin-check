@@ -19,14 +19,18 @@ the GitHub release:
 
 ```bash
 python -m pip install "https://github.com/itscloud0/action-pin-check/releases/download/v0.7.0/action_pin_check-0.7.0-py3-none-any.whl"
-action-pin-check examples/workflows --fail-on never
+cd /path/to/repository-to-audit
+action-pin-check .github/workflows --fail-on never
 ```
 
-Expected demo output:
+Run the command from the repository you want to audit. The wheel contains the
+CLI, not this repository's example fixtures.
+
+Example finding:
 
 ```text
 Action Pin Check
-Root: /path/to/action-pin-check/examples/workflows
+Root: /path/to/repository-to-audit/.github/workflows
 Workflows: 1  External actions: 3  Findings: 3
 
 WARNING unsafe.yml:10  mutable-version-ref

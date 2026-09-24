@@ -4,6 +4,8 @@
 
 - Make the exact public `v0.7.0` wheel the primary quickstart install and verify
   it in CI without checking out the repository.
+- Make the quickstart and copyable GitHub Actions gate scan the user's checked
+  out repository instead of assuming the package includes example fixtures.
 
 ## v0.7.0 - 2026-09-07
 
